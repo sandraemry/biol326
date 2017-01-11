@@ -1,14 +1,14 @@
 # Intro to R --------------------------------------------------------------
 
-#calculator
+# calculator
 5+9
 
-#assign values to variables
+# assign values to variables
 x <- 5
 y <- 9
 x + y
 
-#logical operators
+# logical operators
 x == y
 x !=y
 x > y
@@ -26,11 +26,7 @@ mean(a)
 var(a)
 sd(a)
 
-
-# Reading in data ---------------------------------------------------------
-
-# clear workspace
-rm(list = ls())
+# dataframes ---------------------------------------------------------
 
 # install.packages("gapminder")
 
@@ -57,18 +53,22 @@ length(gapminder)
 
 # plot two variables
 plot(lifeExp ~ continent, data = gapminder)
-
+plot(lifeExp ~ gdpPercap, data = gapminder)
+plot(lifeExp ~ log(gdpPercap), data = gapminder)
 
 # T-tests, ANOVAs, and Regression -----------------------------------------
 
+# clear workspace
+rm(list = ls())
 
+# set working directory to where your data files are located
 setwd("/Users/sandraemry/Documents/biol326/biol326")
 library(tidyverse)
 
 # read in data
-mydata <- read_csv("")
+mydata <- read_csv("/Users/sandraemry/Documents/biol326/biol326/something.csv")
 
-## t-test and ANOVAs
+############### t-test and ANOVAs #############
 
 # check that your categorical variable is a factor
 is.factor(mydata$x)
@@ -88,7 +88,7 @@ plot(model1)
 # ANOVA table
 anova(model1)
 
-## Regression
+############# Regression #############
 
 model2 <- lm(y ~ x, data = mydata)
 
@@ -100,7 +100,7 @@ abline(model2)
 summary(model2)
 confint(model2)
 
-# test Ho of zero slope 
+# test H0 of zero slope 
 anova(model2)
 
 
