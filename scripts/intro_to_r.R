@@ -1,7 +1,7 @@
 # Intro to R --------------------------------------------------------------
 
 # calculator
-5+9
+5 + 9
 
 # assign values to variables
 x <- 5
@@ -10,7 +10,7 @@ x + y
 
 # logical operators
 x == y
-x !=y
+x != y
 x > y
 x < y
 
@@ -28,7 +28,8 @@ sd(a)
 
 # dataframes ---------------------------------------------------------
 
-# install.packages("gapminder")
+# install gapminder package 
+install.packages("gapminder")
 
 # load gapminder package
 library(gapminder)
@@ -48,6 +49,9 @@ ncol(gapminder)
 # how many rows?
 nrow(gapminder)
 
+# what are the dimensions?
+dim(gapminder)
+
 # length of dataframe
 length(gapminder)
 
@@ -56,28 +60,51 @@ plot(lifeExp ~ continent, data = gapminder)
 plot(lifeExp ~ gdpPercap, data = gapminder)
 plot(lifeExp ~ log(gdpPercap), data = gapminder)
 
-# T-tests, ANOVAs, and Regression -----------------------------------------
+# grazer habitat preference - t-tests -----------------------------------------
 
 # clear workspace
 rm(list = ls())
 
 # set working directory to where your data files are located
-setwd("/Users/sandraemry/Documents/biol326/biol326")
+setwd("/Users/sandraemry/Documents/biol326/data")
+
+# load packages
 library(tidyverse)
 
-# read in data
-mydata <- read_csv("/Users/sandraemry/Documents/biol326/biol326/something.csv")
+# read in fucus data
+habitat_pref <- read_csv("/Users/sandraemry/Documents/biol326/data/fucus.csv")
 
-############### t-test and ANOVAs #############
+# structure of dataframe
+str(habitat_pref)
+
+# view entire dataset
+View(habitat_pref)
+
+# fix variable names - Fucus or fucus
+unique(habitat_pref$treatment)
+
+habitat_pref %>% 
+  filter(treatment %in% c("Fucus\n", "fucus", "Fucus")) %>% View
+
+library(stringr)
+habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus\n")] <- "fucus"
+habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus")] <- "fucus"
+habitat_pref$treatment[str_detect(habitat_pref$treatment, "Bare")] <- "bare"
+
+
+# create variable for total grazers
+habitat_pref <- habitat_pref %>% 
+  mutate(total_grazers = (snails + limpets))
+
 
 # check that your categorical variable is a factor
-is.factor(mydata$x)
+is.factor(habitat_pref$treatment)
 
 # to convert to factor
-mydata$x <- factor(mydata$x)
+habitat_pref$treatment <- factor(habitat_pref$treatment)
 
 # fit a linear model to data
-model1<-lm(y ~ x, data = mydata)
+model1<-lm(y ~ treatment, data = habitat_pref)
 
 # parameter estimates and model fit
 summary(model1)    
@@ -88,22 +115,91 @@ plot(model1)
 # ANOVA table
 anova(model1)
 
-############# Regression #############
+# Boulder Sides - Paired t-test -------------------------------------------
 
-model2 <- lm(y ~ x, data = mydata)
+# read in boulder data
+boulder <- read_csv("/Users/sandraemry/Documents/biol326/data/boulder.csv")
+
+# structure of dataframe
+str(boulder)
+
+# view entire dataset
+View(boulder)
+
+# check to see if data is normal
+boulder <- boulder %>% 
+  mutate(difference = top - bottom)
+
+# histogram of the difference between top & bottom 
+hist(boulder$difference)
+
+# reshape dataset to a tidy one!
+boulder <- gather(boulder, key = 'side', value = 'species_richness', top, bottom)
+
+# view entire dataset
+View(boulder)
+
+# paired t - test
+model3 <- t.test(species_richness  ~ side, data = boulder, paired = TRUE)
+
+# mussel size gradient - regression ---------------------------------------
+
+mussels <- read_csv("/Users/sandraemry/documents/biol326/data/mussels.csv")
+
+# structure of dataframe
+str(mussels)
+
+# view entire dataset
+View(mussels)
+
+# model 3
+model3 <- lm(mussel_length ~ distance, data = mussels)
+
+# check assumptions
+plot(model3)
 
 # add a regression line to a scatter plot
-plot(y ~ x, data = mydata)
-abline(model2)
+plot(mussel_length ~ distance, data = mussels)
+abline(model3)
+
+# how to deal with outliers 
+
 
 #estimates of slope, intercept and SEs
-summary(model2)
-confint(model2)
+summary(model3)
+confint(model3)
 
 # test H0 of zero slope 
-anova(model2)
+anova(model3)
 
 
+# Whelk size gradient- regression ------------------------------------------------------
+
+whelks <- read_csv("/Users/sandraemry/Documents/biol326/data/whelks.csv")
+
+# structure of dataset
+str(whelks)
+
+# view entire dataset
+View(whelks)
+
+# model 4
+model4 <- lm(whelk_length ~ distance, data = whelks)
+
+# check assumptions
+plot(model4)
+
+# add a regression line to a scatter plot
+plot(whelk_length ~ distance, data = whelks)
+abline(model4)
+
+# how to deal with unequal variance 
 
 
+#estimates of slope, intercept and SEs
+summary(model4)
+confint(model4)
+
+# test H0 of zero slope 
+anova(model4)
 
