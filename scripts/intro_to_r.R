@@ -104,17 +104,31 @@ is.factor(habitat_pref$treatment)
 # convert to factor
 habitat_pref$treatment <- factor(habitat_pref$treatment)
 
-# fit a linear model to data
-model1<-lm(total_grazers ~ treatment, data = habitat_pref)
+# fit a linear model to data for limpets
+model1a <- lm(limpets ~ treatment, data = habitat_pref)
 
 # parameter estimates and model fit
-summary(model1)    
+summary(model1a)    
 
 # check assumptions of model: plots of residuals, normal quantiles, leverage
-plot(model1)
+par(mfrow = c(2,2))
+plot(model1a)
 
 # ANOVA table
-anova(model1)
+anova(model1a)
+
+# fit a linear model to data for snails
+model1b <- lm(snails ~ treatment, data = habitat_pref)
+
+# parameter estimates and model fit
+summary(model1b)    
+
+# check assumptions of model: plots of residuals, normal quantiles, leverage
+par(mfrow = c(2,2))
+plot(model1b)
+
+# ANOVA table
+anova(model1b)
 
 # Boulder Sides - Paired t-test -------------------------------------------
 
