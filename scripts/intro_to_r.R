@@ -80,31 +80,32 @@ str(habitat_pref)
 # view entire dataset
 View(habitat_pref)
 
-# fix variable names - Fucus or fucus
+# how many unique cases of the treatment variable?
 unique(habitat_pref$treatment)
 
-habitat_pref %>% 
-  filter(treatment %in% c("Fucus\n", "fucus", "Fucus")) %>% View
-
+# load stringr package
 library(stringr)
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus\n")] <- "fucus"
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus")] <- "fucus"
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Bare")] <- "bare"
 
+# fix variable names
+habitat_pref <- habitat_pref %>% 
+  mutate(treatment = str_replace(treatment, "(Fucus\n|Fucus|fucus\n)", "fucus")) %>% 
+  mutate(treatment = str_replace(treatment, "Bare", "bare"))
+
+# how many unique cases of the treatment variable?
+unique(habitat_pref$treatment)
 
 # create variable for total grazers
 habitat_pref <- habitat_pref %>% 
   mutate(total_grazers = (snails + limpets))
 
-
 # check that your categorical variable is a factor
 is.factor(habitat_pref$treatment)
 
-# to convert to factor
+# convert to factor
 habitat_pref$treatment <- factor(habitat_pref$treatment)
 
 # fit a linear model to data
-model1<-lm(y ~ treatment, data = habitat_pref)
+model1<-lm(total_grazers ~ treatment, data = habitat_pref)
 
 # parameter estimates and model fit
 summary(model1)    
@@ -187,9 +188,11 @@ View(whelks)
 model4 <- lm(whelk_length ~ distance, data = whelks)
 
 # check assumptions
+par(mfrow = c(2,2))
 plot(model4)
 
 # add a regression line to a scatter plot
+par(mfrow = c(1,1))
 plot(whelk_length ~ distance, data = whelks)
 abline(model4)
 
