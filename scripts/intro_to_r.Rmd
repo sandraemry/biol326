@@ -97,14 +97,19 @@ str(habitat_pref)
 # view entire dataset
 View(habitat_pref)
 
-# fix variable names - Fucus or fucus
+# how many unique cases of the treatment variable?
 unique(habitat_pref$treatment)
 
+# load stringr package
 library(stringr)
 
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus\n")] <- "fucus"
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus")] <- "fucus"
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Bare")] <- "bare"
+# fix variable names
+habitat_pref <- habitat_pref %>% 
+  mutate(treatment = str_replace(treatment, "(Fucus\n|Fucus|fucus\n)", "fucus")) %>% 
+  mutate(treatment = str_replace(treatment, "Bare", "bare"))
+
+# how many unique cases of the treatment variable?
+unique(habitat_pref$treatment)
 
 # create variable for total grazers
 habitat_pref <- habitat_pref %>% 
@@ -214,9 +219,11 @@ View(whelks)
 model4 <- lm(whelk_length ~ distance, data = whelks)
 
 # check assumptions
+par(mfrow = c(2,2))
 plot(model4)
 
 # add a regression line to a scatter plot
+par(mfrow = c(1,1))
 plot(whelk_length ~ distance, data = whelks)
 abline(model4)
 
