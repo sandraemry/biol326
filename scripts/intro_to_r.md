@@ -1,7 +1,7 @@
 intro\_to\_r
 ================
 Sandra Emry
-2017-01-13
+2017-01-15
 
 \#\# Introduction to r
 ----------------------
@@ -236,19 +236,28 @@ str(habitat_pref)
 # view entire dataset
 View(habitat_pref)
 
-# fix variable names - Fucus or fucus
+# how many unique cases of the treatment variable?
 unique(habitat_pref$treatment)
 ```
 
     ## [1] "Fucus\n" "Fucus"   "bare"    "fucus"   "Bare"
 
 ``` r
+# load stringr package
 library(stringr)
 
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus\n")] <- "fucus"
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Fucus")] <- "fucus"
-habitat_pref$treatment[str_detect(habitat_pref$treatment, "Bare")] <- "bare"
+# fix variable names
+habitat_pref <- habitat_pref %>% 
+  mutate(treatment = str_replace(treatment, "(Fucus\n|Fucus|fucus\n)", "fucus")) %>% 
+  mutate(treatment = str_replace(treatment, "Bare", "bare"))
 
+# how many unique cases of the treatment variable?
+unique(habitat_pref$treatment)
+```
+
+    ## [1] "fucus" "bare"
+
+``` r
 # create variable for total grazers
 habitat_pref <- habitat_pref %>% 
   mutate(total_grazers = (snails + limpets))
@@ -270,51 +279,100 @@ is.factor(habitat_pref$treatment)
     ## [1] TRUE
 
 ``` r
-# fit a linear model to data
-model1<-lm(total_grazers ~ treatment, data = habitat_pref)
+# fit a linear model to data for limpets
+model1a <- lm(limpets ~ treatment, data = habitat_pref)
 
 # parameter estimates and model fit
-summary(model1)    
+summary(model1a)    
 ```
 
     ## 
     ## Call:
-    ## lm(formula = total_grazers ~ treatment, data = habitat_pref)
+    ## lm(formula = limpets ~ treatment, data = habitat_pref)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -21.818  -6.307  -1.636   5.864  44.182 
+    ## -3.5909 -0.8409 -0.5455  0.4545  9.4091 
     ## 
     ## Coefficients:
     ##                Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)      21.818      3.310   6.592 5.59e-08 ***
-    ## treatmentfucus  -15.682      4.681  -3.350  0.00171 ** 
+    ## (Intercept)      3.5909     0.5512   6.514 7.23e-08 ***
+    ## treatmentfucus  -3.0455     0.7796  -3.907 0.000334 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 15.52 on 42 degrees of freedom
-    ## Multiple R-squared:  0.2109, Adjusted R-squared:  0.1921 
-    ## F-statistic: 11.22 on 1 and 42 DF,  p-value: 0.001715
+    ## Residual standard error: 2.586 on 42 degrees of freedom
+    ## Multiple R-squared:  0.2665, Adjusted R-squared:  0.2491 
+    ## F-statistic: 15.26 on 1 and 42 DF,  p-value: 0.0003342
 
 ``` r
 # check assumptions of model: plots of residuals, normal quantiles, leverage
 par(mfrow = c(2,2))
-plot(model1)
+plot(model1a)
 ```
 
 ![](intro_to_r_files/figure-markdown_github/unnamed-chunk-3-1.png)
 
 ``` r
 # ANOVA table
-anova(model1)
+anova(model1a)
 ```
 
     ## Analysis of Variance Table
     ## 
-    ## Response: total_grazers
-    ##           Df  Sum Sq Mean Sq F value   Pr(>F)   
-    ## treatment  1  2705.1  2705.1  11.225 0.001715 **
-    ## Residuals 42 10121.9   241.0                    
+    ## Response: limpets
+    ##           Df Sum Sq Mean Sq F value    Pr(>F)    
+    ## treatment  1 102.02 102.023  15.261 0.0003342 ***
+    ## Residuals 42 280.77   6.685                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+# fit a linear model to data for snails
+model1b <- lm(snails ~ treatment, data = habitat_pref)
+
+# parameter estimates and model fit
+summary(model1b)    
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = snails ~ treatment, data = habitat_pref)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -18.227  -7.727  -2.591   4.909  47.773 
+    ## 
+    ## Coefficients:
+    ##                Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)      18.227      3.167   5.755 8.94e-07 ***
+    ## treatmentfucus  -12.636      4.479  -2.821  0.00728 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 14.86 on 42 degrees of freedom
+    ## Multiple R-squared:  0.1593, Adjusted R-squared:  0.1393 
+    ## F-statistic: 7.959 on 1 and 42 DF,  p-value: 0.007277
+
+``` r
+# check assumptions of model: plots of residuals, normal quantiles, leverage
+par(mfrow = c(2,2))
+plot(model1b)
+```
+
+![](intro_to_r_files/figure-markdown_github/unnamed-chunk-3-2.png)
+
+``` r
+# ANOVA table
+anova(model1b)
+```
+
+    ## Analysis of Variance Table
+    ## 
+    ## Response: snails
+    ##           Df Sum Sq Mean Sq F value   Pr(>F)   
+    ## treatment  1 1756.5 1756.45  7.9587 0.007277 **
+    ## Residuals 42 9269.2  220.69                    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -534,18 +592,20 @@ View(whelks)
 model4 <- lm(whelk_length ~ distance, data = whelks)
 
 # check assumptions
+par(mfrow = c(2,2))
 plot(model4)
 ```
 
-![](intro_to_r_files/figure-markdown_github/unnamed-chunk-6-1.png)![](intro_to_r_files/figure-markdown_github/unnamed-chunk-6-2.png)![](intro_to_r_files/figure-markdown_github/unnamed-chunk-6-3.png)![](intro_to_r_files/figure-markdown_github/unnamed-chunk-6-4.png)
+![](intro_to_r_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 # add a regression line to a scatter plot
+par(mfrow = c(1,1))
 plot(whelk_length ~ distance, data = whelks)
 abline(model4)
 ```
 
-![](intro_to_r_files/figure-markdown_github/unnamed-chunk-6-5.png)
+![](intro_to_r_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 ``` r
 # how to deal with unequal variance 
