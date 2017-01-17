@@ -1,43 +1,66 @@
 # Intro to R --------------------------------------------------------------
 
-# calculator
+# you can use R as a calculator...
 5 + 9
 
 # assign values to variables
+# notice that it doesn't automatically print to screen. 
+# you need to type the name of the variable afterwards to get it to show in the console
 x <- 5
+x
 y <- 9
+y
 x + y
 
-# logical operators
+# logical operators will create a vector give a 'FALSE' if the statement is not true, 
+# and 'TRUE' if it is. 
+# try and see if you can figure out what each of these do
+
 x == y
 x != y
 x > y
 x < y
 
 # vector of numbers
+# the c stands for concatenate, we use it to string more than one element together 
 a <- c(1,2,3,4)
 a <- c(1:4)
 
 # summary stats
+
+# sums all elements in the vector 'a' together
 sum(a)
+
+# maximum number in the vector 'a'
 max(a)
+
+# minimum number in the vector 'a'
 min(a)
+
+# mean of numbers in the vector 'a'
 mean(a)
+
+# variance
 var(a)
+
+# standard deviation
 sd(a)
 
 # dataframes ---------------------------------------------------------
 
 # install gapminder package 
+# gapminder is a dataframe of variables like life expectancy, gdp per capita and population 
+# for different countries, continents and years
 install.packages("gapminder")
 
 # load gapminder package
 library(gapminder)
 
 # look at structure of gapminder dataset
+# tells you it's a data frame, with 6 columns or variables
 str(gapminder)
 
-# look at first few rows
+# look at only the first few rows
 head(gapminder)
 
 # names of columns
@@ -52,10 +75,12 @@ nrow(gapminder)
 # what are the dimensions?
 dim(gapminder)
 
-# length of dataframe
-length(gapminder)
-
 # plot two variables
+# this is just to show you that r can plot the data. 
+# plotting in r is a huge topic with packages like 'ggplot2' that can create beautiful graphs!
+# Ask your TAs for more info if you'd like!
+
+# format: plot( dependent variable ~ independent variable, data = name of dataframe those variables are located in)
 plot(lifeExp ~ continent, data = gapminder)
 plot(lifeExp ~ gdpPercap, data = gapminder)
 plot(lifeExp ~ log(gdpPercap), data = gapminder)
@@ -63,69 +88,100 @@ plot(lifeExp ~ log(gdpPercap), data = gapminder)
 # grazer habitat preference - t-tests -----------------------------------------
 
 # clear workspace
+# This isn't crucial, but it's good practice to start with a clean fresh global environment
 rm(list = ls())
 
 # set working directory to where your data files are located
+# remember the shortcut in the bottom right panel, but copy and paste the code that runs in the
+# console, and put it in your script for future use
 setwd("/Users/sandraemry/Documents/biol326/data")
 
-# load packages
+# load tidyverse package, this is important for the read_csv function
 library(tidyverse)
 
-# read in fucus data
+# load fucus data
+# you can use the shortcut in the top right panel,  but copy and paste the code that runs in the
+# console, and put it in your script for future use
 habitat_pref <- read_csv("/Users/sandraemry/Documents/biol326/data/fucus.csv")
 
 # structure of dataframe
+# I always str the data after I load it to understand what type of data it is
+# and make sure that r read it correctly
 str(habitat_pref)
 
-# view entire dataset
+# view entire dataset, will open up in a new tab 
 View(habitat_pref)
 
 # how many unique cases of the treatment variable?
-unique(habitat_pref$treatment)
+# oops we have errors in our data entry
+# r is very particular in spelling and doesn't like spaces
+unique(habitat_pref$Treatment)
 
 # load stringr package
+# we will use this below to fix the different spellings of fucus and bare
 library(stringr)
 
 # fix variable names
 habitat_pref <- habitat_pref %>% 
-  mutate(treatment = str_replace(treatment, "(Fucus\n|Fucus|fucus\n)", "fucus")) %>% 
-  mutate(treatment = str_replace(treatment, "Bare", "bare"))
+  mutate(Treatment = str_replace(Treatment, "(Fucus\n|Fucus|fucus\n)", "fucus")) %>% 
+  mutate(Treatment = str_replace(Treatment, "Bare", "bare"))
 
 # how many unique cases of the treatment variable?
-unique(habitat_pref$treatment)
-
-# create variable for total grazers
-habitat_pref <- habitat_pref %>% 
-  mutate(total_grazers = (snails + limpets))
+# we should only have two now 
+unique(habitat_pref$Treatment)
 
 # check that your categorical variable is a factor
-is.factor(habitat_pref$treatment)
+# this is important for how r treats the data when fitting the linear model
+# you can think of a factor as a categorical variable
+is.factor(habitat_pref$Treatment)
 
 # convert to factor
-habitat_pref$treatment <- factor(habitat_pref$treatment)
+habitat_pref$Treatment <- factor(habitat_pref$Treatment)
 
 # fit a linear model to data for limpets
-model1a <- lm(limpets ~ treatment, data = habitat_pref)
-
-# parameter estimates and model fit
-summary(model1a)    
+# format: lm(dependent variable ~ independent variable, data = name of dataframe)
+model1a <- lm(limpets ~ Treatment, data = habitat_pref)
 
 # check assumptions of model: plots of residuals, normal quantiles, leverage
+# this sets up the plotting area to plot the graphs 2 rows, by 2 columns
 par(mfrow = c(2,2))
+
 plot(model1a)
 
-# ANOVA table
-anova(model1a)
+# our data doesn't seem to meet the assumptions of normality or equal variance, 
+# let's try logging the independent variable
+model1a_logged <- lm(log(limpets +1) ~ Treatment, data = habitat_pref)
 
-# fit a linear model to data for snails
-model1b <- lm(snails ~ treatment, data = habitat_pref)
+# check the assumptions again to see if logging the data helped 
+
+par(mfrow = c(2,2))
+
+plot(model1a_logged) # looks better!
 
 # parameter estimates and model fit
-summary(model1b)    
+summary(model1a_logged)   
+
+# ANOVA table
+# use this one for the p-value
+anova(model1a_logged)
+
+# moving on to the snail data!
+# fit a linear model to data for snails
+model1b <- lm(snails ~ Treatment, data = habitat_pref)
 
 # check assumptions of model: plots of residuals, normal quantiles, leverage
 par(mfrow = c(2,2))
 plot(model1b)
+
+# let's try logging it as we did above
+model1b_logged <- lm(log(snails + 1) ~ Treatment, data = habitat_pref)
+
+# recheck assumptions of model
+par(mfrow = c(2,2))
+plot(model1b_logged) # looks better
+
+# parameter estimates and model fit
+summary(model1b)    
 
 # ANOVA table
 anova(model1b)
@@ -142,23 +198,40 @@ str(boulder)
 View(boulder)
 
 # check to see if data is normal
+# in paired t tests, it's the difference between the paired columns that need to be normal
+# create a column for the difference between the two sides
 boulder <- boulder %>% 
   mutate(difference = top - bottom)
 
+# check for normality
+# the data points should more or less fall along the line 
+par(mfrow = c(1,1))
+qqnorm(boulder$difference)
+qqline(boulder$difference)
+
 # histogram of the difference between top & bottom 
+# you can also use a histogram to check for normality
 hist(boulder$difference)
 
 # reshape dataset to a tidy one!
+# r likes datasets to be formatted a certain way
+# each row is an observation and each column is a variable
+# we can reshape the dataframe from excel to create a dataframe that r prefers
 boulder <- gather(boulder, key = 'side', value = 'species_richness', top, bottom)
 
 # view entire dataset
+# Can you tell what changed?
 View(boulder)
 
 # paired t - test
-model3 <- t.test(species_richness  ~ side, data = boulder, paired = TRUE)
+model2 <- t.test(species_richness  ~ side, data = boulder, paired = TRUE, var.equal = TRUE)
+
+# test statistic, degrees of freedom = df, p-value
+model2
 
 # mussel size gradient - regression ---------------------------------------
 
+# load mussel data 
 mussels <- read_csv("/Users/sandraemry/documents/biol326/data/mussels.csv")
 
 # structure of dataframe
@@ -171,25 +244,56 @@ View(mussels)
 model3 <- lm(mussel_length ~ distance, data = mussels)
 
 # check assumptions
+par(mfrow = c(2,2))
 plot(model3)
-
-# add a regression line to a scatter plot
-plot(mussel_length ~ distance, data = mussels)
-abline(model3)
+# the normal Q-Q plot shows us that points 10 and 11 seem to be outliters
+# also, by looking at the 4th plot, residuals vc leverage, check for data that fall outside the dashed lines
+# these are data that are particularly influential on your regression line
+# in our case they are borderline
+# first step: check your data, many times they may be just be data entry errors
+# if it's real data, we can't exclude it from our stats
 
 # how to deal with outliers 
+install.packages("car")
+library(car)
 
+outlierTest(model3) #any sig outliers indicated as p<0.
+# tells us that both points are significant outliers
 
-#estimates of slope, intercept and SEs
-summary(model3)
+ncvTest(model3) # significance test for homoscedasticity, if p<0.05 there's a problem
+# we also don't have euqal variance
+
+# let's log transform the dependent variable
+model3_logged <- lm(log(mussel_length) ~ distance, data = mussels)
+
+# recheck assumptions
+par(mfrow = c(2,2))
+plot(model3_logged)
+
+outlierTest(model3_logged)
+
+ncvTest(model3_logged)
+
+# all look much better now! 
+
+# estimates of slope, intercept, standard errors and r^2 value
+summary(model3_logged)
+
+# confidence intervals of the parameter estimates
 confint(model3)
 
 # test H0 of zero slope 
-anova(model3)
+anova(model3_logged)
 
+# use a scatter plot to view the data
+par(mfrow = c(1,1))
+plot(log(mussel_length) ~ distance, data = mussels)
+# add a regression line to the scatter plot
+abline(model3_logged)
 
 # Whelk size gradient- regression ------------------------------------------------------
 
+# load in whelk data
 whelks <- read_csv("/Users/sandraemry/Documents/biol326/data/whelks.csv")
 
 # structure of dataset
@@ -203,20 +307,20 @@ model4 <- lm(whelk_length ~ distance, data = whelks)
 
 # check assumptions
 par(mfrow = c(2,2))
-plot(model4)
+plot(model4) # not great but not the worst...
+
+# estimates of slope, intercept, standard errors and r^2 value
+summary(model4)
+
+# confidence intervals of the parameter estimates
+confint(model4)
+
+# test H0 of zero slope 
+anova(model4)
 
 # add a regression line to a scatter plot
 par(mfrow = c(1,1))
 plot(whelk_length ~ distance, data = whelks)
 abline(model4)
 
-# how to deal with unequal variance 
-
-
-#estimates of slope, intercept and SEs
-summary(model4)
-confint(model4)
-
-# test H0 of zero slope 
-anova(model4)
 
